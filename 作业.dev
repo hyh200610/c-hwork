@@ -46,7 +46,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 DetectEncoding=0
-Encoding=0
+Encoding=1
 
 [VersionInfo]
 Major=1
@@ -77,5 +77,5 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 DetectEncoding=0
-Encoding=0
+Encoding=1
 
