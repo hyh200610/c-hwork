@@ -5,14 +5,17 @@
 #include <limits>
 using namespace std;
 
-void menu()
+// 菜单函数：顶部实时显示当前余额
+void menu(double balance)
 {
 	cout << "=====个人记账系统=====\n";
+	cout << "【当前登记账目余额：" << balance << "】\n";
 	cout << "1.新增账单\n";
 	cout << "2.查看全部账单\n";
 	cout << "3.根据序号删除账单\n";
 	cout << "4.收支统计\n";
 	cout << "5.保存账单到文件\n";
+	cout << "6.手动修改/填写账目余额\n";
 	cout << "0.退出程序\n";
 	cout << "请输入功能序号：";
 }
@@ -44,7 +47,8 @@ int main()
 		while(true)
 		{
 			system("cls");
-			menu();
+			double nowBal = book.getBalance();
+			menu(nowBal); // 传入余额打印在菜单顶部
 			cin >> op;
 
 			// 拦截字母、符号等非法输入
@@ -56,10 +60,10 @@ int main()
 				continue;
 			}
 
-			// 限制只能输入0~5，大数直接拦截
-			if(op < 0 || op > 5)
+			// 限制只能输入0~6，大数直接拦截
+			if(op < 0 || op > 6)
 			{
-				cout << "\n输入序号无效，请输入0-5之间的数字\n";
+				cout << "\n输入序号无效，请输入0-6之间的数字\n";
 				waitEnter();
 				continue;
 			}
@@ -126,6 +130,24 @@ int main()
 				book.saveToFile();
 				cout << "\n操作完成，按回车键返回菜单...";
 				waitEnter();
+				waitEnter();
+			}
+			else if(op == 6)
+			{
+				double newBal;
+				cout << "请输入新的账目余额：";
+				if(!(cin >> newBal))
+				{
+					clearCinErr();
+					cout << "输入格式错误，请输入数字！\n";
+				}
+				else
+				{
+					book.setBalance(newBal);
+					cout << "账目余额修改成功！\n";
+				}
+				clearCinErr();
+				cout << "\n操作完成，按回车键返回菜单...";
 				waitEnter();
 			}
 		}

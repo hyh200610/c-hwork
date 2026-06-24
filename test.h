@@ -33,15 +33,19 @@ class accountbook
 		std::vector<bill> list1;
 		std::string name;
 		int realIdSeed;
-		double totalBalance; // 新增：全局账目余额
+		double totalBalance; // 全局账目余额
 	public:
 		accountbook():name("默认账本"),realIdSeed(1),totalBalance(0.0){}
 		accountbook(std::string n):name(n),realIdSeed(1),totalBalance(0.0){}
 
-		// 获取当前余额
+		// 获取余额get、设置余额set 成对齐全
 		double getBalance() const
 		{
 			return totalBalance;
+		}
+		void setBalance(double bal)
+		{
+			totalBalance = bal;
 		}
 
 		void add(std::string n,double a)
@@ -73,7 +77,7 @@ class accountbook
 				{
 					std::cout<<"序号:"<<i+1<<" 名称:"<<list1[i].get_n()<<" 金额:"<<list1[i].get_a()<<std::endl;
 				}
-				std::cout<<"当前账目总余额："<<totalBalance<<std::endl;
+				std::cout<<"当前登记账目余额："<<totalBalance<<std::endl;
 			}catch(...){
 				std::cout<<"读取账单列表异常，展示失败\n";
 			}
@@ -145,8 +149,8 @@ class accountbook
 				std::cout<<"========收支统计========"<<std::endl;
 				std::cout<<"总收入："<<income<<std::endl;
 				std::cout<<"总支出："<<expend<<std::endl;
-				std::cout<<"账面结余："<<income-expend<<std::endl;
-				std::cout<<"当前账目余额："<<totalBalance<<std::endl; // 新增显示全局余额
+				std::cout<<"账面理论结余："<<income-expend<<std::endl;
+				std::cout<<"手动登记账目余额："<<totalBalance<<std::endl;
 			}catch(...){
 				std::cout<<"统计数据异常\n";
 			}
@@ -200,7 +204,7 @@ class accountbook
 				}
 				in.close();
 				std::cout << "读取本地账单完成\n";
-				std::cout << "读取到历史账目余额：" << totalBalance << std::endl;
+				std::cout << "读取到登记账目余额：" << totalBalance << std::endl;
 			}catch(const std::exception& e){
 				std::cout<<"读取文件失败："<<e.what()<<std::endl;
 				totalBalance = 0;
