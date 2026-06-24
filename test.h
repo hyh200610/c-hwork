@@ -5,7 +5,7 @@
 #include<string>
 #include<vector>
 #include<fstream>
-#include<stdexcept> // 异常头文件
+#include<stdexcept>
 
 class bill
 {
@@ -17,7 +17,6 @@ class bill
 		bill(){}
 		bill(std::string name1,int id1,double amt1):name(name1),id(id1),amt(amt1){}
 		~bill(){
-			// 注释掉打印，避免销毁时访问野id闪退
 			// std::cout<<"id:"<<id<<"删除成功"<<std::endl;
 		}
 		std::string get_n() const {return name;}
@@ -33,10 +32,17 @@ class accountbook
 	private:
 		std::vector<bill> list1;
 		std::string name;
-		int realIdSeed; // 全局唯一真实ID生成种子
+		int realIdSeed;
+		double totalBalance; // 新增：全局账目余额
 	public:
-		accountbook():name("默认账本"),realIdSeed(1){}
-		accountbook(std::string n):name(n),realIdSeed(1){}
+		accountbook():name("默认账本"),realIdSeed(1),totalBalance(0.0){}
+		accountbook(std::string n):name(n),realIdSeed(1),totalBalance(0.0){}
+
+		// 获取当前余额
+		double getBalance() const
+		{
+			return totalBalance;
+		}
 
 		void add(std::string n,double a)
 		{
@@ -46,7 +52,7 @@ class accountbook
 				}
 				int realId = realIdSeed++;
 				list1.push_back(bill(n, realId, a));
-				// 只输出展示序号，隐藏底层ID
+				totalBalance += a; // 新增账单同步更新余额
 				int showIndex = static_cast<int>(list1.size());
 				std::cout<<"账单添加成功，序号："<<showIndex<<std::endl;
 			}catch(const std::exception& e){
@@ -65,15 +71,14 @@ class accountbook
 				std::cout<<"======"<<name<<"======\n";
 				for(size_t i=0;i<list1.size();i++)
 				{
-					// 仅打印连续展示序号，不输出底层真实ID
 					std::cout<<"序号:"<<i+1<<" 名称:"<<list1[i].get_n()<<" 金额:"<<list1[i].get_a()<<std::endl;
 				}
+				std::cout<<"当前账目总余额："<<totalBalance<<std::endl;
 			}catch(...){
 				std::cout<<"读取账单列表异常，展示失败\n";
 			}
 		}
 
-		// 【用户唯一可用删除接口】按界面展示序号删除，直接按下标定位，不检索底层ID
 		void deleteByIndex(int showIdx)
 		{
 			try
@@ -84,7 +89,10 @@ class accountbook
 				if(targetPos >= list1.size())
 					throw std::runtime_error("该序号不存在");
 
-				// 直接按下标erase，完全不遍历查找底层ID
+				// 删除前先扣减余额
+				double delMoney = list1[targetPos].get_a();
+				totalBalance -= delMoney;
+
 				list1.erase(list1.begin() + targetPos);
 				std::cout<<"序号"<<showIdx<<" 删除成功\n";
 			}
@@ -94,7 +102,6 @@ class accountbook
 			}
 		}
 
-		// 私有，屏蔽外部调用，仅内部备用，用户菜单不再提供该功能
 	private:
 		void deleteid(int delid)
 		{
@@ -115,12 +122,15 @@ class accountbook
 				{
 					throw std::runtime_error("未找到该底层ID账单");
 				}
+				double delMoney = list1[idx].get_a();
+				totalBalance -= delMoney;
 				list1.erase(list1.begin()+idx);
 				std::cout<<"底层ID:"<<delid<<" 删除成功\n";
 			}catch(const std::exception& e){
 				std::cout<<"删除失败："<<e.what()<<std::endl;
 			}
 		}
+
 	public:
 		void stat() const
 		{
@@ -135,12 +145,14 @@ class accountbook
 				std::cout<<"========收支统计========"<<std::endl;
 				std::cout<<"总收入："<<income<<std::endl;
 				std::cout<<"总支出："<<expend<<std::endl;
-				std::cout<<"结余："<<income-expend<<std::endl;
+				std::cout<<"账面结余："<<income-expend<<std::endl;
+				std::cout<<"当前账目余额："<<totalBalance<<std::endl; // 新增显示全局余额
 			}catch(...){
 				std::cout<<"统计数据异常\n";
 			}
 		}
 
+		// 文件第一行保存余额，后续每行保存账单
 		void saveToFile(std::string filePath = "bill.txt")
 		{
 			try{
@@ -149,7 +161,7 @@ class accountbook
 				{
 					throw std::runtime_error("文件无法打开，无写入权限");
 				}
-				// txt文件依旧保存底层真实ID，打开文件可查看底层编号
+				out << totalBalance << std::endl; // 第一行写入余额
 				for(const auto &b : list1)
 				{
 					out << b.get_id() << " " << b.get_n() << " " << b.get_a() << std::endl;
@@ -168,9 +180,12 @@ class accountbook
 				if (!in.is_open())
 				{
 					std::cout << "无本地账单文件\n";
+					totalBalance = 0; // 无文件余额归零
 					return;
 				}
 				list1.clear();
+				// 先读取第一行余额
+				in >> totalBalance;
 				int id;
 				std::string name;
 				double amt;
@@ -185,8 +200,10 @@ class accountbook
 				}
 				in.close();
 				std::cout << "读取本地账单完成\n";
+				std::cout << "读取到历史账目余额：" << totalBalance << std::endl;
 			}catch(const std::exception& e){
 				std::cout<<"读取文件失败："<<e.what()<<std::endl;
+				totalBalance = 0;
 			}
 		}
 };

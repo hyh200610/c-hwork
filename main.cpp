@@ -43,7 +43,7 @@ int main()
 		int op;
 		while(true)
 		{
-			//system("cls");
+			system("cls");
 			menu();
 			cin >> op;
 
