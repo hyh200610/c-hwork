@@ -2,6 +2,7 @@
 #include<iostream>
 #include<string>
 #include<cstdlib>
+#include <limits>
 using namespace std;
 
 void menu()
@@ -19,7 +20,14 @@ void menu()
 void clearCinErr()
 {
 	cin.clear();
-	cin.ignore(9999, '\n');
+	cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
+// 用getline读取整行，彻底清空所有输入，无残留
+void waitEnter()
+{
+	string temp;
+	getline(cin, temp);
 }
 
 int main()
@@ -29,13 +37,13 @@ int main()
 		accountbook book("我的日常账本");
 		book.loadFromFile();
 		cout << "初始化完成，按回车键进入主菜单...";
-		cin.get();
-		clearCinErr();
+		string tmp;
+		getline(cin, tmp);
 
 		int op;
 		while(true)
 		{
-			system("cls");
+			//system("cls");
 			menu();
 			cin >> op;
 
@@ -44,21 +52,37 @@ int main()
 			{
 				clearCinErr();
 				cout << "\n错误：仅允许输入数字！" << endl;
-				cout << "按回车键返回菜单...";
-				cin.get();
+				waitEnter();
+				continue;
+			}
+
+			// 限制只能输入0~5，大数直接拦截
+			if(op < 0 || op > 5)
+			{
+				cout << "\n输入序号无效，请输入0-5之间的数字\n";
+				waitEnter();
 				continue;
 			}
 
 			if(op == 0)
 			{
-				cout << "程序即将退出，是否自动保存？1保存 0不保存：";
+				cout << "程序即将退出，是否保存？0取消退出 1保存 2不保存：";
 				int s;
 				cin >> s;
-				clearCinErr();
-				if(s == 1)
-					book.saveToFile();
-				cout << "程序结束\n";
-				break;
+				clearCinErr(); // 清cin>>s留下的换行
+				if(s!=0)
+				{
+					if(s == 1)
+					{
+						book.saveToFile();
+					}
+					cout << "程序结束\n";
+					break;
+				}
+				else
+				{
+					waitEnter();
+				}	
 			}
 			else if(op == 1)
 			{
@@ -68,18 +92,17 @@ int main()
 				cin >> name;
 				cout << "请输入金额(正数收入，负数支出)：";
 				cin >> money;
-				clearCinErr();
+				clearCinErr(); // 清数字输入残留换行
 				book.add(name, money);
-				cout << "\n操作完成，按回车返回菜单...";
-				cin.ignore();
-				cin.get();
+				cout << "\n操作完成，按回车键返回菜单...";
+				waitEnter();
 			}
 			else if(op == 2)
 			{
 				book.show();
-				cout << "\n按回车返回菜单...";
-				cin.ignore();
-				cin.get();
+				cout << "\n操作完成，按回车键返回菜单...";
+				waitEnter();
+				waitEnter();
 			}
 			else if(op == 3)
 			{
@@ -88,30 +111,22 @@ int main()
 				cin >> showNum;
 				clearCinErr();
 				book.deleteByIndex(showNum);
-				cout << "\n操作完成，按回车返回菜单...";
-				cin.ignore();
-				cin.get();
+				cout << "\n操作完成，按回车键返回菜单...";
+				waitEnter();
 			}
 			else if(op == 4)
 			{
 				book.stat();
-				cout << "\n按回车返回菜单...";
-				cin.ignore();
-				cin.get();
+				cout << "\n操作完成，按回车键返回菜单...";
+				waitEnter();
+				waitEnter();
 			}
 			else if(op == 5)
 			{
 				book.saveToFile();
-				cout << "\n操作完成，按回车返回菜单...";
-				cin.ignore();
-				cin.get();
-			}
-			else
-			{
-				cout << "输入序号无效，请输入0-5之间的数字\n";
-				cout << "按回车返回菜单...";
-				cin.ignore();
-				cin.get();
+				cout << "\n操作完成，按回车键返回菜单...";
+				waitEnter();
+				waitEnter();
 			}
 		}
 	}
