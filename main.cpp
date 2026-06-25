@@ -45,7 +45,11 @@ int main()
 		int op;
 		while (true)
 		{
-			system("cls");
+			#ifdef _WIN32
+				system("cls");
+			#else
+				system("clear");
+			#endif
 			double nowBal = book.getBalance();
 			menu(nowBal);
 			cin >> op;

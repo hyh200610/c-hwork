@@ -10,23 +10,28 @@
 #include<sstream>
 #include<cctype>
 #include<algorithm>
+#include<iomanip>
 
 // 单独日期基类
 class Date
 {
 protected:
-	std::string dateStr;
+	std::string dateStr; // 统一格式 yyyy.MM.dd
 public:
-	// 获取当前系统日期 格式 2026.1.12
+	// 获取当前系统日期，自动格式化为 yyyy.xx.xx
 	std::string getCurrentDate()
 	{
 		std::time_t now = std::time(nullptr);
 		std::tm* t = std::localtime(&now);
 		std::ostringstream oss;
-		oss << t->tm_year + 1900 << "." << t->tm_mon + 1 << "." << t->tm_mday;
+		oss << std::setfill('0')
+			<< t->tm_year + 1900 << "."
+			<< std::setw(2) << t->tm_mon + 1 << "."
+			<< std::setw(2) << t->tm_mday;
 		return oss.str();
 	}
-	// 校验日期格式
+
+	// 校验格式：必须包含两个点，仅数字和点
 	bool checkDateValid(const std::string& s)
 	{
 		size_t p1 = s.find('.');
@@ -40,19 +45,38 @@ public:
 		}
 		return true;
 	}
+
+	// 标准化日期：2026.1.3 → 2026.01.03
+	std::string formatDate(const std::string& s)
+	{
+		size_t p1 = s.find('.');
+		size_t p2 = s.find('.', p1 + 1);
+		int y = stoi(s.substr(0, p1));
+		int m = stoi(s.substr(p1 + 1, p2 - p1 - 1));
+		int d = stoi(s.substr(p2 + 1));
+
+		std::ostringstream oss;
+		oss << std::setfill('0')
+			<< y << "."
+			<< std::setw(2) << m << "."
+			<< std::setw(2) << d;
+		return oss.str();
+	}
+
 	void setDate(std::string d)
 	{
 		if (d.empty() || !checkDateValid(d))
 			dateStr = getCurrentDate();
 		else
-			dateStr = d;
+			dateStr = formatDate(d);
 	}
+
 	std::string getDate() const
 	{
 		return dateStr;
 	}
 
-	// 辅助：把 "2026.1.12" 转成可比较数字 20260112
+	// 转数字用于排序 20260105
 	long long dateToNum() const
 	{
 		size_t p1 = dateStr.find('.');
@@ -142,7 +166,7 @@ public:
 		}
 	}
 
-	// 查看时自动临时排序，不修改原始list1
+	// 查看时临时拷贝排序，原始文件存储顺序不变
 	void show() const
 	{
 		try {
@@ -151,14 +175,12 @@ public:
 				std::cout << "暂无账单记录\n";
 				return;
 			}
-			// 拷贝一份临时数组用于排序展示，原始数据不变
 			std::vector<bill> temp = list1;
 			std::sort(temp.begin(), temp.end(), [](const bill& a, const bill& b) {
 				long long numA = a.dateToNum();
 				long long numB = b.dateToNum();
 				if (numA != numB)
 					return numA < numB;
-				// 日期相同，按创建ID先后
 				return a.get_id() < b.get_id();
 			});
 
@@ -283,7 +305,6 @@ public:
 				throw std::runtime_error("文件无法打开，无写入权限");
 			}
 			out << initMoney << std::endl;
-			// 保存原始录入顺序，不排序
 			for (const auto& b : list1)
 			{
 				out << b.get_id() << " " << b.getDate() << " " << b.get_n() << " " << b.get_a() << std::endl;
